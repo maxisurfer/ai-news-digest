@@ -1,0 +1,160 @@
+# LLM Configuration - Choose your AI model provider
+llm:
+  # Provider: 'claude', 'deepseek', 'gemini', 'grok', 'openai'
+  # Claude (Anthropic): Excellent quality, higher cost
+  # DeepSeek: Good quality, much lower cost, better Chinese support
+  # Gemini: Fast, multimodal, free tier available
+  # Grok: Advanced reasoning, real-time data
+  # OpenAI: Industry standard, latest models
+  provider: gemini
+
+  # Optional: Specify a model (if not set, uses provider's default)
+  # Claude models: claude-sonnet-4-5-20250929, claude-3-5-sonnet-20241022
+  # DeepSeek models: deepseek-chat, deepseek-reasoner
+  # model: claude-sonnet-4-5-20250929
+
+# Edit style and "about me" here (used in Gemini prompts)
+personalization:
+  language: English
+  about_me: |
+    I live by the ocean, I like surfing and football,
+    and I build small online projects with AI.
+  style: |
+    Short and easy to read. 1-2 sentences per item.
+    Friendly tone, light humor is OK. No hype, no clickbait.
+  top_of_day_lines: 3
+
+news:
+  # Enable web search tool (uses DuckDuckGo API via LLM tool calling)
+  # Note: DuckDuckGo API often returns limited results. RSS feeds are more reliable.
+  # Default: false (recommended to keep disabled)
+  enable_web_search: false
+
+  # Maximum news items to fetch per source (fetch more for AI to select from)
+  max_items_per_source: 10
+  max_age_hours: 24
+  history_days: 5
+
+  # Topics and sources (edit here — no code changes needed)
+  topics:
+    - id: world
+      name: World news
+      google_news:
+        - world news
+        - politics
+        - geopolitics
+      reddit:
+        - worldnews
+      youtube:
+        - name: BBC News
+          channel_id: UC16niRr50-MSBwiO3YDb3RA
+    - id: sports
+      name: Sports
+      google_news:
+        - Brazilian football
+        - Brasileirao
+        - Brazil national team
+        - Copa Libertadores
+        - NBA
+        - NBA playoffs
+        - NBA trades
+        - Formula 1
+        - F1 race
+        - F1 qualifying
+      reddit:
+        - soccer
+        - nba
+        - formula1
+      youtube:
+        - name: ESPN FC
+          channel_id: UC6c1z7bA__85CIWZ_jpCK-Q
+        - name: NBA
+          channel_id: UCWJ2lWNubArHWmf3FIHbfcQ
+        - name: Formula 1
+          channel_id: UCB_qr75-ydFVKSF9Dmo6izg
+    - id: ai_tech
+      name: AI and technology
+      google_news:
+        - artificial intelligence
+        - OpenAI Google Gemini
+        - tech launches
+      reddit:
+        - technology
+        - artificial
+      youtube:
+        - name: Marques Brownlee
+          channel_id: UCBJycsmduvYEL83R_U4JriQ
+        - name: Fireship
+          channel_id: UCsBjURrPoezykLs9EqgamOA
+    - id: cars
+      name: Cars
+      google_news:
+        - new car launches
+        - car market
+        - electric cars
+      reddit:
+        - cars
+      youtube:
+        - name: Top Gear
+          channel_id: UCjOl2AUblVmg2rA_cRgZkFg
+
+  # Stage 1: Selection prompt template
+  # Placeholders: {formatted_news}, {total_items}, {about_me}, {language}
+  stage1_prompt_template: |
+      {formatted_news}
+
+      ## YOUR TASK - STAGE 1: NEWS SELECTION BY TOPIC
+
+      You are an editor for a personal morning digest in {language}. Pick the best items for each topic.
+
+      ### ABOUT THE READER
+      {about_me}
+
+      ### RULES
+      - Up to 5 items per topic (fewer is fine if news is thin — do not pad)
+      - One item per story (no duplicates)
+      - Prefer original reporting over reposts and opinion
+      - No clickbait, rumors, or celebrity gossip
+      - Sports: balance Brazilian football, NBA, and Formula 1 when there is news
+      - AI and technology: pick the strongest stories (still at most 5 for that topic)
+      - Prefer stories that match the reader's interests when quality is similar
+      - Within each topic's array, order IDs from most to least relevant to the reader
+
+      ### OUTPUT
+      Return ONLY valid JSON (no markdown fences), with topic keys and arrays of IDs:
+      {{"world": ["WORLD-1"], "sports": ["SPORTS-1"], "ai_tech": ["AI_TECH-1"], "cars": ["CARS-1"]}}
+
+      Use only IDs that appear above. Maximum 20 items total across all topics.
+
+  # Stage 2: Summarization (JSON only — layout is built in code)
+  # Placeholders: {count}, {selected_news}, {about_me}, {style}, {language}, {top_of_day_lines}
+  stage2_prompt_template: |
+      You write copy for a personal morning digest in {language}. Summarize the {count} items below.
+
+      ### ABOUT THE READER
+      {about_me}
+
+      ### STYLE
+      {style}
+      Always write in {language}, even if the source is another language.
+
+      {selected_news}
+
+      ### YOUR TASK
+      Return ONLY valid JSON (no markdown fences, no links):
+      {{
+        "top_of_day": ["line 1", "line 2", "line 3"],
+        "items": [
+          {{"id": "WORLD-1", "headline": "Short headline", "summary": "One or two clear sentences."}}
+        ]
+      }}
+
+      Rules:
+      - Exactly {top_of_day_lines} short "top_of_day" lines (big-picture highlights, no links)
+      - One entry in "items" for every ID listed above, same "id" values
+      - headline: short and informative; summary: 1-2 sentences only
+      - Do NOT include URLs or markdown links in the JSON
+
+logging:
+  level: INFO
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
