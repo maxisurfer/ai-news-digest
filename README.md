@@ -4,7 +4,9 @@ Your own AI agent that reads the news for you. Every morning it collects news on
 
 No server. It runs for free on GitHub Actions, with the free Gemini API.
 
-This is the finished project from my Udemy course **Build Your Own AI Agent with Claude & Cursor, Free on GitHub**. In the course we build it step by step, with AI writing all the code. If you got stuck, compare your version with this one. Or just take it and make it yours.
+This is the finished project from my Udemy course **[Build Your Own AI Agent with Claude & Cursor, Free on GitHub](https://www.udemy.com/course/build-your-own-ai-agent-with-claude-cursor-free-on-github/)**. In the course we build it step by step, with AI writing all the code. If you got stuck, compare your version with this one. Or just take it and make it yours.
+
+En español: **[Crea tu agente de IA con Claude y Cursor gratis en GitHub](https://www.udemy.com/course/crea-tu-agente-de-ia-con-claude-y-cursor-gratis-en-github/)**.
 
 ## What it does
 
